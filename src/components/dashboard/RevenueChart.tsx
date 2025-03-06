@@ -8,6 +8,7 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ timeFilter }: RevenueChartProps) {
+  // Ensure we're properly using the timeFilter to get data
   const data = getRevenueData(timeFilter);
 
   const getTitle = () => {
