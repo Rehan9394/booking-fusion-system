@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ArrowDownRight, ArrowUpRight, BadgePercent, Banknote, CalendarClock, CheckCircle } from "lucide-react";
 import { MetricCard } from "./MetricCard";
@@ -150,15 +151,15 @@ export function DashboardPage() {
           <div className="space-y-4">
             <div className="flex justify-between items-center pb-3 border-b border-border">
               <span className="text-muted-foreground">Occupancy Rate</span>
-              <span className="font-medium">{metrics.occupancyRate.thisMonth.toFixed(1)}%</span>
+              <span className="font-medium">{metrics.occupancyRate.toFixed(1)}%</span>
             </div>
             <div className="flex justify-between items-center pb-3 border-b border-border">
               <span className="text-muted-foreground">Total Revenue</span>
-              <span className="font-medium">{formatCurrency(metrics.revenue.thisMonth)}</span>
+              <span className="font-medium">{formatCurrency(metrics.revenue)}</span>
             </div>
             <div className="flex justify-between items-center pb-3 border-b border-border">
               <span className="text-muted-foreground">Avg. Daily Rate</span>
-              <span className="font-medium">{formatCurrency(metrics.revenue.thisMonth / 30)}</span>
+              <span className="font-medium">{formatCurrency(metrics.revenue / 30)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Total Bookings</span>
