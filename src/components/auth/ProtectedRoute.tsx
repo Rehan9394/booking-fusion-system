@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 export function ProtectedRoute() {
   const { user, isLoading } = useAuth();
   
+  // In development, we'll provide a way to bypass authentication
+  const bypassAuth = import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true';
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -13,7 +16,7 @@ export function ProtectedRoute() {
     );
   }
   
-  if (!user) {
+  if (!user && !bypassAuth) {
     return <Navigate to="/login" replace />;
   }
   
