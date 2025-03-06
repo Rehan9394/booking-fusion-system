@@ -9,6 +9,10 @@ import { DashboardPage } from "./components/dashboard/DashboardPage";
 import { BookingsPage } from "./components/bookings/BookingsPage";
 import { RoomsPage } from "./components/rooms/RoomsPage";
 import { CalendarPage } from "./components/calendar/CalendarPage";
+import { StaffPage } from "./components/staff/StaffPage";
+import { ReportsPage } from "./components/reports/ReportsPage";
+import { CleaningPage } from "./components/cleaning/CleaningPage";
+import { SettingsPage } from "./components/settings/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,15 +56,11 @@ const App = () => (
               </MainLayout>
             } 
           />
-          {/* Placeholder routes for future implementation */}
           <Route 
             path="/staff" 
             element={
               <MainLayout>
-                <div className="py-20 text-center text-muted-foreground">
-                  <h1 className="text-xl font-medium mb-2">Staff Management</h1>
-                  <p>This feature will be implemented in the next phase.</p>
-                </div>
+                <StaffPage />
               </MainLayout>
             } 
           />
@@ -68,10 +68,7 @@ const App = () => (
             path="/reports" 
             element={
               <MainLayout>
-                <div className="py-20 text-center text-muted-foreground">
-                  <h1 className="text-xl font-medium mb-2">Reports</h1>
-                  <p>This feature will be implemented in the next phase.</p>
-                </div>
+                <ReportsPage />
               </MainLayout>
             } 
           />
@@ -79,10 +76,7 @@ const App = () => (
             path="/cleaning" 
             element={
               <MainLayout>
-                <div className="py-20 text-center text-muted-foreground">
-                  <h1 className="text-xl font-medium mb-2">Cleaning Management</h1>
-                  <p>This feature will be implemented in the next phase.</p>
-                </div>
+                <CleaningPage />
               </MainLayout>
             } 
           />
@@ -90,10 +84,7 @@ const App = () => (
             path="/settings" 
             element={
               <MainLayout>
-                <div className="py-20 text-center text-muted-foreground">
-                  <h1 className="text-xl font-medium mb-2">Settings</h1>
-                  <p>This feature will be implemented in the next phase.</p>
-                </div>
+                <SettingsPage />
               </MainLayout>
             } 
           />

@@ -3,12 +3,28 @@ import React from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { getOccupancyData } from "@/lib/data";
 
-export function OccupancyChart() {
-  const data = getOccupancyData();
+interface OccupancyChartProps {
+  timeFilter: string;
+}
+
+export function OccupancyChart({ timeFilter }: OccupancyChartProps) {
+  const data = getOccupancyData(timeFilter);
+
+  const getTitle = () => {
+    switch(timeFilter) {
+      case "today": return "Today";
+      case "yesterday": return "Yesterday";
+      case "last7days": return "Last 7 Days";
+      case "last30days": return "Last 30 Days";
+      case "thisMonth": return "This Month";
+      case "lastMonth": return "Last Month";
+      default: return "Last 30 Days";
+    }
+  };
 
   return (
     <div className="bg-card rounded-lg p-6 shadow-card border border-border/40 h-[400px] animate-fade-in">
-      <h3 className="text-lg font-medium mb-6">Occupancy Rate (Last 30 Days)</h3>
+      <h3 className="text-lg font-medium mb-6">Occupancy Rate ({getTitle()})</h3>
       <ResponsiveContainer width="100%" height="85%">
         <AreaChart
           data={data}

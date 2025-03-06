@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { ArrowDownRight, ArrowUpRight, BadgePercent, Banknote, CalendarClock, CheckCircle } from "lucide-react";
 import { MetricCard } from "./MetricCard";
 import { OccupancyChart } from "./OccupancyChart";
@@ -7,8 +6,11 @@ import { RevenueChart } from "./RevenueChart";
 import { formatCurrency, getDashboardMetrics, bookings } from "@/lib/data";
 import { format, isFuture, parseISO } from "date-fns";
 
+type TimeFilter = "today" | "yesterday" | "last7days" | "last30days" | "thisMonth" | "lastMonth";
+
 export function DashboardPage() {
-  const metrics = getDashboardMetrics();
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("today");
+  const metrics = getDashboardMetrics(timeFilter);
   
   // Get upcoming bookings for the widget
   const upcomingBookingsData = bookings
@@ -16,12 +18,33 @@ export function DashboardPage() {
     .sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime())
     .slice(0, 5);
 
+  const handleTimeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTimeFilter(e.target.value as TimeFilter);
+  };
+
+  // Format title based on the selected time filter
+  const getTimeFilterTitle = () => {
+    switch(timeFilter) {
+      case "today": return "Today";
+      case "yesterday": return "Yesterday";
+      case "last7days": return "Last 7 Days";
+      case "last30days": return "Last 30 Days";
+      case "thisMonth": return "This Month";
+      case "lastMonth": return "Last Month";
+      default: return "Today";
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <div className="flex space-x-2">
-          <select className="px-3 py-2 bg-card text-foreground border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+          <select 
+            className="px-3 py-2 bg-card text-foreground border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            value={timeFilter}
+            onChange={handleTimeFilterChange}
+          >
             <option value="today">Today</option>
             <option value="yesterday">Yesterday</option>
             <option value="last7days">Last 7 Days</option>
@@ -34,19 +57,19 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
-          title="Occupancy Rate"
-          value={`${metrics.occupancyRate.today.toFixed(1)}%`}
+          title={`Occupancy Rate (${getTimeFilterTitle()})`}
+          value={`${metrics.occupancyRate.toFixed(1)}%`}
           icon={<BadgePercent className="h-5 w-5" />}
-          description="Today's room occupancy"
-          trend={{ value: 3.2, isUpward: true }}
+          description={`${getTimeFilterTitle()}'s room occupancy`}
+          trend={metrics.occupancyRateTrend}
           className="animate-slide-in-up"
           />
         <MetricCard
-          title="Revenue"
-          value={formatCurrency(metrics.revenue.today)}
+          title={`Revenue (${getTimeFilterTitle()})`}
+          value={formatCurrency(metrics.revenue)}
           icon={<Banknote className="h-5 w-5" />}
-          description="Today's revenue"
-          trend={{ value: 2.5, isUpward: true }}
+          description={`${getTimeFilterTitle()}'s revenue`}
+          trend={metrics.revenueTrend}
           className="animate-slide-in-up [animation-delay:100ms]"
         />
         <MetricCard
@@ -54,7 +77,7 @@ export function DashboardPage() {
           value={metrics.upcomingBookings}
           icon={<CalendarClock className="h-5 w-5" />}
           description="Next 7 days"
-          trend={{ value: 1.8, isUpward: false }}
+          trend={metrics.upcomingBookingsTrend}
           className="animate-slide-in-up [animation-delay:200ms]"
         />
         <MetricCard
@@ -62,14 +85,14 @@ export function DashboardPage() {
           value={metrics.pendingCleanings}
           icon={<CheckCircle className="h-5 w-5" />}
           description="Rooms to be cleaned"
-          trend={{ value: 12.3, isUpward: false }}
+          trend={metrics.pendingCleaningsTrend}
           className="animate-slide-in-up [animation-delay:300ms]"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <OccupancyChart />
-        <RevenueChart />
+        <OccupancyChart timeFilter={timeFilter} />
+        <RevenueChart timeFilter={timeFilter} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

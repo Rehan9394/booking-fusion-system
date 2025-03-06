@@ -1,6 +1,5 @@
-
 // Mock data for the hotel PMS
-import { subDays, addDays, format } from "date-fns";
+import { subDays, addDays, format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 // Guest statuses
 export type BookingStatus = "confirmed" | "checked_in" | "checked_out" | "cancelled" | "no_show";
@@ -399,16 +398,19 @@ export const bookings: Booking[] = [
   },
 ];
 
-// Dashboard metrics
-export const getDashboardMetrics = (): DashboardMetrics => {
+// Dashboard metrics with time filter
+export const getDashboardMetrics = (timeFilter: string = "today") => {
   // Calculate occupancy rates
   const totalRooms = rooms.length;
   const occupiedToday = rooms.filter(room => room.status === "occupied").length;
   const occupancyRateToday = (occupiedToday / totalRooms) * 100;
   
   // Weekly and monthly rates (mocked for this example)
+  const occupancyRateYesterday = 71.3;
   const occupancyRateWeek = 78.5;
+  const occupancyRateLastWeek = 75.2;
   const occupancyRateMonth = 82.3;
+  const occupancyRateLastMonth = 79.8;
   
   // Calculate revenue (based on current bookings)
   const revenueToday = bookings
@@ -416,54 +418,246 @@ export const getDashboardMetrics = (): DashboardMetrics => {
     .reduce((sum, booking) => sum + booking.totalAmount / 3, 0); // Divide by avg stay length for daily estimate
   
   // Weekly and monthly revenue (mocked with multipliers)
+  const revenueYesterday = revenueToday * 0.9;
   const revenueWeek = revenueToday * 7;
+  const revenueLastWeek = revenueToday * 6.5;
   const revenueMonth = revenueToday * 30;
+  const revenueLastMonth = revenueToday * 28;
   
   // Count upcoming bookings (next 7 days)
   const upcomingBookings = bookings.filter(booking => {
     const checkInDate = new Date(booking.checkIn);
-    const sevenDaysFromNow = addDays(today, 7);
-    return booking.status === "confirmed" && checkInDate <= sevenDaysFromNow && checkInDate >= today;
+    const sevenDaysFromNow = addDays(new Date(), 7);
+    return booking.status === "confirmed" && checkInDate <= sevenDaysFromNow && checkInDate >= new Date();
   }).length;
+  
+  const upcomingBookingsYesterday = upcomingBookings - 1;
+  const upcomingBookingsLastWeek = upcomingBookings - 2;
   
   // Count pending cleanings
   const pendingCleanings = rooms.filter(room => room.status === "cleaning").length;
+  const pendingCleaningsYesterday = pendingCleanings + 1;
+  const pendingCleaningsLastWeek = pendingCleanings + 3;
   
-  return {
-    occupancyRate: {
-      today: occupancyRateToday,
-      thisWeek: occupancyRateWeek,
-      thisMonth: occupancyRateMonth,
-    },
-    revenue: {
-      today: revenueToday,
-      thisWeek: revenueWeek,
-      thisMonth: revenueMonth,
-    },
-    upcomingBookings,
-    pendingCleanings,
+  let metrics = {
+    occupancyRate: occupancyRateToday,
+    revenue: revenueToday,
+    upcomingBookings: upcomingBookings,
+    pendingCleanings: pendingCleanings,
+    occupancyRateTrend: { value: 3.2, isUpward: true },
+    revenueTrend: { value: 2.5, isUpward: true },
+    upcomingBookingsTrend: { value: 1.8, isUpward: false },
+    pendingCleaningsTrend: { value: 12.3, isUpward: false }
   };
+  
+  // Adjust metrics based on the selected time filter
+  switch(timeFilter) {
+    case "yesterday":
+      metrics = {
+        occupancyRate: occupancyRateYesterday,
+        revenue: revenueYesterday,
+        upcomingBookings: upcomingBookingsYesterday,
+        pendingCleanings: pendingCleaningsYesterday,
+        occupancyRateTrend: { value: 2.1, isUpward: true },
+        revenueTrend: { value: 1.8, isUpward: true },
+        upcomingBookingsTrend: { value: 0.5, isUpward: true },
+        pendingCleaningsTrend: { value: 8.7, isUpward: false }
+      };
+      break;
+    case "last7days":
+      metrics = {
+        occupancyRate: occupancyRateWeek,
+        revenue: revenueWeek,
+        upcomingBookings: upcomingBookings,
+        pendingCleanings: pendingCleanings,
+        occupancyRateTrend: { value: 3.3, isUpward: true },
+        revenueTrend: { value: 4.8, isUpward: true },
+        upcomingBookingsTrend: { value: 2.4, isUpward: true },
+        pendingCleaningsTrend: { value: 5.6, isUpward: false }
+      };
+      break;
+    case "last30days":
+      metrics = {
+        occupancyRate: occupancyRateMonth,
+        revenue: revenueMonth,
+        upcomingBookings: upcomingBookings,
+        pendingCleanings: pendingCleanings,
+        occupancyRateTrend: { value: 2.5, isUpward: true },
+        revenueTrend: { value: 5.2, isUpward: true },
+        upcomingBookingsTrend: { value: 3.7, isUpward: true },
+        pendingCleaningsTrend: { value: 9.3, isUpward: false }
+      };
+      break;
+    case "thisMonth":
+      metrics = {
+        occupancyRate: occupancyRateMonth,
+        revenue: revenueMonth,
+        upcomingBookings: upcomingBookings,
+        pendingCleanings: pendingCleanings,
+        occupancyRateTrend: { value: 2.5, isUpward: true },
+        revenueTrend: { value: 6.1, isUpward: true },
+        upcomingBookingsTrend: { value: 4.2, isUpward: true },
+        pendingCleaningsTrend: { value: 3.1, isUpward: false }
+      };
+      break;
+    case "lastMonth":
+      metrics = {
+        occupancyRate: occupancyRateLastMonth,
+        revenue: revenueLastMonth,
+        upcomingBookings: upcomingBookingsLastWeek,
+        pendingCleanings: pendingCleaningsLastWeek,
+        occupancyRateTrend: { value: 1.2, isUpward: false },
+        revenueTrend: { value: 2.3, isUpward: false },
+        upcomingBookingsTrend: { value: 1.5, isUpward: false },
+        pendingCleaningsTrend: { value: 7.8, isUpward: true }
+      };
+      break;
+  }
+  
+  return metrics;
 };
 
 // Sample occupancy data for charts
-export const getOccupancyData = () => {
+export const getOccupancyData = (timeFilter: string = "last30days") => {
   const today = new Date();
-  return Array.from({ length: 30 }, (_, i) => {
-    const date = format(subDays(today, 29 - i), "MMM dd");
+  let dataPoints = 30;
+  let startDate = subDays(today, 29);
+  
+  // Adjust data points and start date based on the time filter
+  switch(timeFilter) {
+    case "today":
+      dataPoints = 24;
+      startDate = new Date(today.setHours(0, 0, 0, 0));
+      return Array.from({ length: dataPoints }, (_, i) => {
+        const hour = i;
+        const date = `${hour}:00`;
+        // More variation for hourly data
+        const baseOccupancy = 60 + Math.sin(i * 0.5) * 20;
+        const occupancyRate = Math.max(0, Math.min(100, baseOccupancy + Math.floor(Math.random() * 15)));
+        return { date, occupancyRate };
+      });
+    case "yesterday":
+      dataPoints = 24;
+      startDate = new Date(subDays(today, 1).setHours(0, 0, 0, 0));
+      return Array.from({ length: dataPoints }, (_, i) => {
+        const hour = i;
+        const date = `${hour}:00`;
+        // More variation for hourly data
+        const baseOccupancy = 55 + Math.sin(i * 0.5) * 18;
+        const occupancyRate = Math.max(0, Math.min(100, baseOccupancy + Math.floor(Math.random() * 15)));
+        return { date, occupancyRate };
+      });
+    case "last7days":
+      dataPoints = 7;
+      startDate = subDays(today, 6);
+      break;
+    case "thisMonth":
+      dataPoints = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(); // Days in current month
+      startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      break;
+    case "lastMonth":
+      const lastMonth = subMonths(today, 1);
+      dataPoints = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate(); // Days in last month
+      startDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+      break;
+  }
+  
+  return Array.from({ length: dataPoints }, (_, i) => {
+    const date = format(addDays(startDate, i), "MMM dd");
     // Create some variation in the data
-    const occupancyRate = 50 + Math.floor(Math.random() * 40);
+    let occupancyRate;
+    
+    if (timeFilter === "last7days") {
+      // Weekly pattern with weekend peaks
+      const dayOfWeek = (i + startDate.getDay()) % 7;
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      occupancyRate = isWeekend ? 
+        70 + Math.floor(Math.random() * 20) : // Higher on weekends
+        50 + Math.floor(Math.random() * 30);  // Lower on weekdays
+    } else {
+      // Monthly pattern with gradual increase
+      const baseRate = 60 + (i / dataPoints) * 20;
+      occupancyRate = Math.min(100, Math.max(40, baseRate + Math.floor(Math.random() * 20 - 10)));
+    }
+    
     return { date, occupancyRate };
   });
 };
 
 // Sample revenue data for charts
-export const getRevenueData = () => {
+export const getRevenueData = (timeFilter: string = "last30days") => {
   const today = new Date();
-  return Array.from({ length: 30 }, (_, i) => {
-    const date = format(subDays(today, 29 - i), "MMM dd");
-    // Create some variation in the data with an upward trend
-    const baseRevenue = 500 + i * 20;
-    const revenue = baseRevenue + Math.floor(Math.random() * 300);
+  let dataPoints = 30;
+  let startDate = subDays(today, 29);
+  let baseRevenue = 500;
+  let randomFactor = 300;
+  
+  // Adjust data points and start date based on the time filter
+  switch(timeFilter) {
+    case "today":
+      dataPoints = 24;
+      startDate = new Date(today.setHours(0, 0, 0, 0));
+      baseRevenue = 100;
+      randomFactor = 150;
+      return Array.from({ length: dataPoints }, (_, i) => {
+        const hour = i;
+        const date = `${hour}:00`;
+        // More variation for hourly data with morning and evening peaks
+        const hourlyFactor = (i < 10 || i > 18) ? 1.5 : 1; // Higher in morning and evening
+        const revenue = Math.max(0, baseRevenue * hourlyFactor + Math.floor(Math.random() * randomFactor));
+        return { date, revenue };
+      });
+    case "yesterday":
+      dataPoints = 24;
+      startDate = new Date(subDays(today, 1).setHours(0, 0, 0, 0));
+      baseRevenue = 90;
+      randomFactor = 140;
+      return Array.from({ length: dataPoints }, (_, i) => {
+        const hour = i;
+        const date = `${hour}:00`;
+        // More variation for hourly data with morning and evening peaks
+        const hourlyFactor = (i < 10 || i > 18) ? 1.4 : 0.9; // Higher in morning and evening
+        const revenue = Math.max(0, baseRevenue * hourlyFactor + Math.floor(Math.random() * randomFactor));
+        return { date, revenue };
+      });
+    case "last7days":
+      dataPoints = 7;
+      startDate = subDays(today, 6);
+      baseRevenue = 3000;
+      randomFactor = 1000;
+      break;
+    case "thisMonth":
+      dataPoints = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(); // Days in current month
+      startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      baseRevenue = 5000;
+      randomFactor = 2000;
+      break;
+    case "lastMonth":
+      const lastMonth = subMonths(today, 1);
+      dataPoints = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate(); // Days in last month
+      startDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+      baseRevenue = 4800;
+      randomFactor = 1800;
+      break;
+  }
+  
+  return Array.from({ length: dataPoints }, (_, i) => {
+    const date = format(addDays(startDate, i), "MMM dd");
+    
+    let revenue;
+    if (timeFilter === "last7days") {
+      // Weekly pattern with weekend peaks
+      const dayOfWeek = (i + startDate.getDay()) % 7;
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      revenue = isWeekend ? 
+        baseRevenue * 1.3 + Math.floor(Math.random() * randomFactor) : // Higher on weekends
+        baseRevenue + Math.floor(Math.random() * randomFactor);         // Lower on weekdays
+    } else {
+      // Monthly pattern with gradual increase
+      const trendFactor = 1 + (i / dataPoints) * 0.3; // Up to 30% increase over the period
+      revenue = baseRevenue * trendFactor + Math.floor(Math.random() * randomFactor);
+    }
+    
     return { date, revenue };
   });
 };
@@ -522,3 +716,4 @@ export const getRoomTypeDisplayName = (type: RoomType): string => {
       return type;
   }
 };
+
