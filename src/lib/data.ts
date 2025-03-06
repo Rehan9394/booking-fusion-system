@@ -716,4 +716,3 @@ export const getRoomTypeDisplayName = (type: RoomType): string => {
       return type;
   }
 };
-
