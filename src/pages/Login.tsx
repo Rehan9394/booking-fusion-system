@@ -54,6 +54,8 @@ export function Login() {
     navigate('/');
   };
 
+  const isMissingCredentials = import.meta.env.DEV && (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-card animate-fade-in">
@@ -76,7 +78,7 @@ export function Login() {
               <Info className="h-4 w-4" />
               <AlertTitle>Development Mode</AlertTitle>
               <AlertDescription>
-                {!import.meta.env.VITE_SUPABASE_URL ? (
+                {isMissingCredentials ? (
                   <div className="space-y-2">
                     <p>
                       <span className="font-semibold">Missing Supabase credentials.</span> Please configure:
@@ -135,7 +137,7 @@ export function Login() {
             </Button>
           </form>
           
-          {import.meta.env.DEV && !import.meta.env.VITE_SUPABASE_URL && (
+          {isMissingCredentials && (
             <div className="pt-2">
               <Alert variant="warning">
                 <AlertTriangle className="h-4 w-4" />
@@ -146,9 +148,14 @@ export function Login() {
                     variant="outline" 
                     className="w-full mt-2 bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
                     onClick={handleDevBypass}
+                    size="lg"
                   >
+                    <AlertTriangle className="h-4 w-4 mr-2" />
                     Bypass Authentication (Dev Mode)
                   </Button>
+                  <p className="text-xs text-amber-700 text-center">
+                    For development only. This will simulate being logged in.
+                  </p>
                 </AlertDescription>
               </Alert>
             </div>
