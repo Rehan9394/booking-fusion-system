@@ -21,10 +21,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Check if we're in dev mode with bypass
+  const isDevBypass = import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true';
+
   useEffect(() => {
     const fetchSession = async () => {
       try {
         // Get initial session
+        if (isDevBypass) {
+          console.log('Auth bypass enabled in development mode.');
+          setIsLoading(false);
+          return;
+        }
+        
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -44,6 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     fetchSession();
 
+    // Skip auth listener in dev bypass mode
+    if (isDevBypass) return;
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
@@ -53,25 +65,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
-  }, []);
+  }, [isDevBypass]);
 
   const signIn = async (email: string, password: string) => {
     try {
+      // In development mode with bypass enabled, simulate successful auth
+      if (isDevBypass) {
+        toast({
+          title: "Development Mode",
+          description: "Auth bypass enabled. Proceeding as if signed in.",
+        });
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
-      // If we're in development and VITE_BYPASS_AUTH is true, show success even on error
-      if (error) {
-        if (import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true') {
-          toast({
-            title: "Development Mode",
-            description: "Auth bypass enabled. Proceeding as if signed in.",
-          });
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
       
       toast({
         title: "Success",
@@ -98,19 +109,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      // In development mode with bypass enabled, simulate successful auth
+      if (isDevBypass) {
+        toast({
+          title: "Development Mode",
+          description: "Auth bypass enabled. Account created successfully.",
+        });
+        return;
+      }
+      
       const { error } = await supabase.auth.signUp({ email, password });
       
-      // If we're in development and VITE_BYPASS_AUTH is true, show success even on error
-      if (error) {
-        if (import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true') {
-          toast({
-            title: "Development Mode",
-            description: "Auth bypass enabled. Account created successfully.",
-          });
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
       
       toast({
         title: "Success",
@@ -137,8 +147,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // In development mode with bypass enabled, simulate sign out
+      if (isDevBypass) {
+        toast({
+          title: "Development Mode",
+          description: "Auth bypass enabled. Signed out successfully.",
+        });
+        return;
+      }
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
       toast({
         title: "Signed out",
         description: "You have been signed out successfully.",
