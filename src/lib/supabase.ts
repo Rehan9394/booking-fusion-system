@@ -18,4 +18,31 @@ if (import.meta.env.DEV && (!import.meta.env.VITE_SUPABASE_URL || !import.meta.e
   }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase client with improved error handling options
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    // Increase timeout and retry options for better resilience
+    fetch: (url, options) => {
+      return fetch(url, { 
+        ...options, 
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      });
+    },
+  },
+});
+
+// Simple function to test the Supabase connection
+export const testSupabaseConnection = async () => {
+  try {
+    const { error } = await supabase.auth.getSession();
+    return { success: !error, error };
+  } catch (error) {
+    console.error('Supabase connection test failed:', error);
+    return { success: false, error };
+  }
+};

@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, Info, AlertTriangle, Check, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, Info, AlertTriangle, Check, RefreshCw, WifiOff } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { supabase } from '@/lib/supabase';
+import { supabase, testSupabaseConnection } from '@/lib/supabase';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -19,10 +19,25 @@ export function Login() {
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const [editingCredentials, setEditingCredentials] = useState(false);
-  const [supabaseUrl, setSupabaseUrl] = useState(import.meta.env.VITE_SUPABASE_URL || '');
-  const [supabaseKey, setSupabaseKey] = useState(import.meta.env.VITE_SUPABASE_ANON_KEY || '');
+  const [supabaseUrl, setSupabaseUrl] = useState(localStorage.getItem('supabase_url') || import.meta.env.VITE_SUPABASE_URL || '');
+  const [supabaseKey, setSupabaseKey] = useState(localStorage.getItem('supabase_key') || import.meta.env.VITE_SUPABASE_ANON_KEY || '');
   const [credentialStatus, setCredentialStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'disconnected'>('unknown');
+  
+  // Check connection status on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      const result = await testSupabaseConnection();
+      if (result.success) {
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('disconnected');
+      }
+    };
+    
+    checkConnection();
+  }, []);
 
   // Check if in development mode with bypass enabled
   useEffect(() => {
@@ -60,7 +75,19 @@ export function Login() {
     navigate('/');
   };
 
-  const testSupabaseConnection = async () => {
+  const retryConnection = async () => {
+    setConnectionStatus('unknown');
+    setTestingConnection(true);
+    
+    try {
+      const result = await testSupabaseConnection();
+      setConnectionStatus(result.success ? 'connected' : 'disconnected');
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
+  const testSupabaseCredentials = async () => {
     setTestingConnection(true);
     try {
       // Create a temporary Supabase client with the entered credentials
@@ -94,6 +121,7 @@ export function Login() {
   };
 
   const isMissingCredentials = import.meta.env.DEV && (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY);
+  const hasLocalCredentials = !!(localStorage.getItem('supabase_url') && localStorage.getItem('supabase_key'));
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -112,12 +140,53 @@ export function Login() {
             </Alert>
           )}
           
+          {connectionStatus === 'disconnected' && (
+            <Alert variant="destructive">
+              <WifiOff className="h-4 w-4" />
+              <AlertTitle>Network Error</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>Could not connect to authentication server. Please check your internet connection or try again later.</p>
+                <div className="flex justify-between gap-2 mt-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={retryConnection}
+                    disabled={testingConnection}
+                  >
+                    {testingConnection ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Retry Connection
+                      </>
+                    )}
+                  </Button>
+                  
+                  {import.meta.env.DEV && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1" 
+                      onClick={() => setEditingCredentials(true)}
+                    >
+                      Configure Credentials
+                    </Button>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {import.meta.env.DEV && (
             <Alert variant="info">
               <Info className="h-4 w-4" />
               <AlertTitle>Development Mode</AlertTitle>
               <AlertDescription>
-                {isMissingCredentials ? (
+                {isMissingCredentials && !hasLocalCredentials ? (
                   <div className="space-y-2">
                     <p>
                       <span className="font-semibold">Missing Supabase credentials.</span> Please configure:
@@ -136,6 +205,18 @@ export function Login() {
                       onClick={() => setEditingCredentials(true)}
                     >
                       Configure Supabase Credentials
+                    </Button>
+                  </div>
+                ) : hasLocalCredentials ? (
+                  <div className="space-y-2">
+                    <p>Using locally stored Supabase credentials from previous configuration.</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full mt-2" 
+                      onClick={() => setEditingCredentials(true)}
+                    >
+                      Edit Supabase Credentials
                     </Button>
                   </div>
                 ) : (
@@ -179,7 +260,7 @@ export function Login() {
                 </Button>
                 <Button 
                   variant="default" 
-                  onClick={testSupabaseConnection}
+                  onClick={testSupabaseCredentials}
                   disabled={!supabaseUrl || !supabaseKey || testingConnection}
                   className="flex-1"
                 >
@@ -232,6 +313,7 @@ export function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com" 
                   required 
+                  disabled={connectionStatus === 'disconnected'}
                 />
               </div>
               <div className="space-y-2">
@@ -247,9 +329,14 @@ export function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required 
+                  disabled={connectionStatus === 'disconnected'}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loading || connectionStatus === 'disconnected'}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -266,9 +353,9 @@ export function Login() {
             <div className="pt-2">
               <Alert variant="warning">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Network Error</AlertTitle>
+                <AlertTitle>Development Mode</AlertTitle>
                 <AlertDescription className="space-y-2">
-                  <p>Cannot connect to authentication server.</p>
+                  <p>No Supabase credentials available. For development purposes:</p>
                   <Button 
                     variant="outline" 
                     className="w-full mt-2 bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"

@@ -19,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnectionError, setIsConnectionError] = useState(false);
   const { toast } = useToast();
 
   // Check if we're in dev mode with bypass
@@ -38,14 +39,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error('Error fetching session:', error.message);
-          // Don't throw here, just handle gracefully
+          if (error.message === 'Failed to fetch') {
+            setIsConnectionError(true);
+          }
         }
         
         setSession(data?.session ?? null);
         setUser(data?.session?.user ?? null);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to fetch auth session:', error);
-        // Still mark as not loading even if there's an error
+        if (error.message === 'Failed to fetch') {
+          setIsConnectionError(true);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -70,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isDevBypass]);
 
   const signIn = async (email: string, password: string) => {
+    setIsConnectionError(false);
     try {
       // In development mode with bypass enabled, simulate successful auth
       if (isDevBypass) {
@@ -91,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       // Handle network errors specially
       if (error.message === 'Failed to fetch') {
+        setIsConnectionError(true);
         toast({
           title: "Network Error",
           description: "Could not connect to authentication server. Please check your internet connection or try again later.",
@@ -108,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
+    setIsConnectionError(false);
     try {
       // In development mode with bypass enabled, simulate successful auth
       if (isDevBypass) {
@@ -129,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       // Handle network errors specially
       if (error.message === 'Failed to fetch') {
+        setIsConnectionError(true);
         toast({
           title: "Network Error",
           description: "Could not connect to authentication server. Please check your internet connection or try again later.",
