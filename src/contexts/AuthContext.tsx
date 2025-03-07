@@ -29,12 +29,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error('Error fetching session:', error.message);
+          // Don't throw here, just handle gracefully
         }
         
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
+        setSession(data?.session ?? null);
+        setUser(data?.session?.user ?? null);
       } catch (error) {
         console.error('Failed to fetch auth session:', error);
+        // Still mark as not loading even if there's an error
       } finally {
         setIsLoading(false);
       }
@@ -58,17 +60,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      
+      // If we're in development and VITE_BYPASS_AUTH is true, show success even on error
+      if (error) {
+        if (import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true') {
+          toast({
+            title: "Development Mode",
+            description: "Auth bypass enabled. Proceeding as if signed in.",
+          });
+          return;
+        }
+        throw error;
+      }
+      
       toast({
         title: "Success",
         description: "You have successfully signed in.",
       });
     } catch (error: any) {
-      toast({
-        title: "Error signing in",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Handle network errors specially
+      if (error.message === 'Failed to fetch') {
+        toast({
+          title: "Network Error",
+          description: "Could not connect to authentication server. Please check your internet connection or try again later.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error signing in",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };
@@ -76,17 +99,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
+      
+      // If we're in development and VITE_BYPASS_AUTH is true, show success even on error
+      if (error) {
+        if (import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true') {
+          toast({
+            title: "Development Mode",
+            description: "Auth bypass enabled. Account created successfully.",
+          });
+          return;
+        }
+        throw error;
+      }
+      
       toast({
         title: "Success",
         description: "Check your email for the confirmation link.",
       });
     } catch (error: any) {
-      toast({
-        title: "Error signing up",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Handle network errors specially
+      if (error.message === 'Failed to fetch') {
+        toast({
+          title: "Network Error",
+          description: "Could not connect to authentication server. Please check your internet connection or try again later.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error signing up",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };

@@ -1,32 +1,57 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [devMode, setDevMode] = useState(false);
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
+
+  // Check if in development mode with bypass enabled
+  useEffect(() => {
+    setDevMode(import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true');
+  }, []);
+
+  // If user is already logged in or we're in dev mode, redirect to home
+  useEffect(() => {
+    if (user || devMode) {
+      navigate('/');
+    }
+  }, [user, devMode, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     try {
       await signIn(email, password);
       navigate('/');
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (err: any) {
+      console.error('Login error:', err);
+      // Don't set an error if it's a network error - the toast will handle it
+      if (err.message !== 'Failed to fetch') {
+        setError(err.message || 'Failed to sign in');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Show dev mode bypass option
+  const handleDevBypass = () => {
+    navigate('/');
   };
 
   return (
@@ -38,7 +63,29 @@ export function Login() {
             Enter your credentials to sign in to your account
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {import.meta.env.DEV && (
+            <Alert className="bg-yellow-50 text-yellow-800 border-yellow-200">
+              <AlertDescription className="text-xs">
+                <strong>Development Mode</strong>: 
+                {import.meta.env.VITE_SUPABASE_URL ? 
+                  " Using Supabase URL: " + import.meta.env.VITE_SUPABASE_URL.substring(0, 20) + "..." :
+                  " No Supabase URL configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables."
+                }
+                {import.meta.env.VITE_BYPASS_AUTH === 'true' && 
+                  " Auth bypass is ENABLED."
+                }
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -77,6 +124,16 @@ export function Login() {
               )}
             </Button>
           </form>
+          
+          {import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true' && (
+            <Button 
+              variant="outline" 
+              className="w-full mt-2 text-yellow-600 border-yellow-300 hover:bg-yellow-50"
+              onClick={handleDevBypass}
+            >
+              Bypass Authentication (Dev Mode)
+            </Button>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col">
           <div className="mt-2 text-center text-sm">

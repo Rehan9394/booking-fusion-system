@@ -1,25 +1,39 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { signUp } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [devMode, setDevMode] = useState(false);
+  const { signUp, user } = useAuth();
   const navigate = useNavigate();
+
+  // Check if in development mode with bypass enabled
+  useEffect(() => {
+    setDevMode(import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true');
+  }, []);
+
+  // If user is already logged in or we're in dev mode, redirect to home
+  useEffect(() => {
+    if (user || devMode) {
+      navigate('/');
+    }
+  }, [user, devMode, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
+    setError(null);
     
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -30,12 +44,26 @@ export function Register() {
     
     try {
       await signUp(email, password);
-      navigate('/login');
-    } catch (error) {
-      console.error('Registration error:', error);
+      
+      // In real scenario, Supabase might send a confirmation email
+      // For now, redirect to login
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      // Don't set an error if it's a network error - the toast will handle it
+      if (err.message !== 'Failed to fetch') {
+        setError(err.message || 'Failed to create account');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Show dev mode bypass option
+  const handleDevBypass = () => {
+    navigate('/');
   };
 
   return (
@@ -47,7 +75,29 @@ export function Register() {
             Enter your details to create your account
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {import.meta.env.DEV && (
+            <Alert className="bg-yellow-50 text-yellow-800 border-yellow-200">
+              <AlertDescription className="text-xs">
+                <strong>Development Mode</strong>: 
+                {import.meta.env.VITE_SUPABASE_URL ? 
+                  " Using Supabase URL: " + import.meta.env.VITE_SUPABASE_URL.substring(0, 20) + "..." :
+                  " No Supabase URL configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables."
+                }
+                {import.meta.env.VITE_BYPASS_AUTH === 'true' && 
+                  " Auth bypass is ENABLED."
+                }
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -80,9 +130,7 @@ export function Register() {
                 required 
               />
             </div>
-            {error && (
-              <div className="text-destructive text-sm">{error}</div>
-            )}
+            
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
@@ -94,6 +142,16 @@ export function Register() {
               )}
             </Button>
           </form>
+          
+          {import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true' && (
+            <Button 
+              variant="outline" 
+              className="w-full mt-2 text-yellow-600 border-yellow-300 hover:bg-yellow-50"
+              onClick={handleDevBypass}
+            >
+              Bypass Authentication (Dev Mode)
+            </Button>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col">
           <div className="mt-2 text-center text-sm">
