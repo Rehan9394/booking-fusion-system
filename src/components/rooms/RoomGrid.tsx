@@ -3,12 +3,15 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Room, getStatusColorClass, getStatusDisplayName, getRoomTypeDisplayName, formatCurrency } from "@/lib/data";
 import { BedDouble, Check, AlertCircle, Clock, Ban } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface RoomGridProps {
   rooms: Room[];
+  onViewDetails: (room: Room) => void;
+  onEditRoom: (room: Room) => void;
 }
 
-export function RoomGrid({ rooms }: RoomGridProps) {
+export function RoomGrid({ rooms, onViewDetails, onEditRoom }: RoomGridProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "available":
@@ -86,12 +89,18 @@ export function RoomGrid({ rooms }: RoomGridProps) {
             )}
             
             <div className="mt-4 flex space-x-2">
-              <button className="flex-1 px-3 py-1.5 text-xs bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">
+              <Button 
+                className="flex-1 px-3 py-1.5 text-xs bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
+                onClick={() => onViewDetails(room)}
+              >
                 Details
-              </button>
-              <button className="flex-1 px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+              </Button>
+              <Button 
+                className="flex-1 px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                onClick={() => onEditRoom(room)}
+              >
                 Edit
-              </button>
+              </Button>
             </div>
           </div>
         </div>

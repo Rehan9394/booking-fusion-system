@@ -1,13 +1,32 @@
 
 import React, { useState } from "react";
-import { ArrowDownRight, ArrowUpRight, BadgePercent, Banknote, CalendarClock, CheckCircle } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, BadgePercent, Banknote, CalendarClock, CheckCircle, Clock, Tool, AlertCircle, Zap } from "lucide-react";
 import { MetricCard } from "./MetricCard";
 import { OccupancyChart } from "./OccupancyChart";
 import { RevenueChart } from "./RevenueChart";
 import { formatCurrency, getDashboardMetrics, bookings } from "@/lib/data";
 import { format, isFuture, parseISO } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 type TimeFilter = "today" | "yesterday" | "last7days" | "last30days" | "thisMonth" | "lastMonth";
+
+// Sample user activity data
+const userActivityData = [
+  { id: 1, user: "John Doe", action: "Checked in guest", time: "10 minutes ago" },
+  { id: 2, user: "Sarah Johnson", action: "Added new booking", time: "25 minutes ago" },
+  { id: 3, user: "Mike Wilson", action: "Updated room status", time: "45 minutes ago" },
+  { id: 4, user: "Emma Roberts", action: "Processed payment", time: "1 hour ago" },
+  { id: 5, user: "David Lee", action: "Checked out guest", time: "2 hours ago" },
+];
+
+// Sample cleaning status data
+const cleaningStatusData = [
+  { id: 1, room: "101", status: "completed", cleaner: "Alice Brown", time: "09:15 AM" },
+  { id: 2, room: "203", status: "in_progress", cleaner: "Tom Smith", time: "10:30 AM" },
+  { id: 3, room: "305", status: "pending", cleaner: "Maria Garcia", time: "11:45 AM" },
+  { id: 4, room: "410", status: "completed", cleaner: "James Wilson", time: "08:20 AM" },
+  { id: 5, room: "512", status: "pending", cleaner: "Emily Chen", time: "01:00 PM" },
+];
 
 export function DashboardPage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("today");
@@ -36,6 +55,23 @@ export function DashboardPage() {
     }
   };
 
+  // Get status icon and color for cleaning status
+  const getCleaningStatusInfo = (status: string) => {
+    switch(status) {
+      case "completed":
+        return { icon: <CheckCircle className="h-4 w-4 text-green-500" />, text: "Completed" };
+      case "in_progress":
+        return { icon: <Clock className="h-4 w-4 text-blue-500" />, text: "In Progress" };
+      case "pending":
+        return { icon: <AlertCircle className="h-4 w-4 text-amber-500" />, text: "Pending" };
+      default:
+        return { icon: <AlertCircle className="h-4 w-4 text-gray-500" />, text: "Unknown" };
+    }
+  };
+
+  // Format occupancy rate to remove decimal places
+  const formattedOccupancyRate = Math.round(metrics.occupancyRate);
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -59,7 +95,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title={`Occupancy Rate (${getTimeFilterTitle()})`}
-          value={`${metrics.occupancyRate.toFixed(1)}%`}
+          value={`${formattedOccupancyRate}%`}
           icon={<BadgePercent className="h-5 w-5" />}
           description={`${getTimeFilterTitle()}'s room occupancy`}
           trend={metrics.occupancyRateTrend}
@@ -91,13 +127,78 @@ export function DashboardPage() {
         />
       </div>
 
+      {/* Quick Action Buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-card rounded-lg p-6 border border-border/40 animate-fade-in">
+        <Button className="bg-primary/10 text-primary hover:bg-primary/20 flex flex-col items-center justify-center h-24 space-y-2">
+          <CalendarClock className="h-6 w-6" />
+          <span>New Booking</span>
+        </Button>
+        <Button className="bg-primary/10 text-primary hover:bg-primary/20 flex flex-col items-center justify-center h-24 space-y-2">
+          <CheckCircle className="h-6 w-6" />
+          <span>Room Cleaning</span>
+        </Button>
+        <Button className="bg-primary/10 text-primary hover:bg-primary/20 flex flex-col items-center justify-center h-24 space-y-2">
+          <Tool className="h-6 w-6" />
+          <span>Maintenance</span>
+        </Button>
+        <Button className="bg-primary/10 text-primary hover:bg-primary/20 flex flex-col items-center justify-center h-24 space-y-2">
+          <Zap className="h-6 w-6" />
+          <span>Daily Report</span>
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <OccupancyChart timeFilter={timeFilter} />
         <RevenueChart timeFilter={timeFilter} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-card rounded-lg shadow-card border border-border/40 lg:col-span-2 animate-fade-in">
+        <div className="bg-card rounded-lg shadow-card border border-border/40 lg:col-span-1 animate-fade-in">
+          <div className="p-6">
+            <h3 className="text-lg font-medium mb-4">Recent User Activity</h3>
+            <div className="space-y-4">
+              {userActivityData.map((activity) => (
+                <div key={activity.id} className="flex items-start space-x-3 pb-3 border-b border-border last:border-0 last:pb-0">
+                  <div className="bg-muted rounded-full p-2 mt-0.5">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{activity.user}</p>
+                    <p className="text-sm text-muted-foreground">{activity.action}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-lg shadow-card border border-border/40 lg:col-span-1 animate-fade-in">
+          <div className="p-6">
+            <h3 className="text-lg font-medium mb-4">Room Cleaning Status</h3>
+            <div className="space-y-4">
+              {cleaningStatusData.map((cleaning) => (
+                <div key={cleaning.id} className="flex items-start space-x-3 pb-3 border-b border-border last:border-0 last:pb-0">
+                  <div className="bg-muted rounded-full p-2 mt-0.5">
+                    {getCleaningStatusInfo(cleaning.status).icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <p className="font-medium text-sm">Room {cleaning.room}</p>
+                      <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">
+                        {getCleaningStatusInfo(cleaning.status).text}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{cleaning.cleaner}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{cleaning.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-lg shadow-card border border-border/40 animate-fade-in">
           <div className="p-6">
             <h3 className="text-lg font-medium mb-4">Upcoming Bookings</h3>
             <div className="overflow-auto">
@@ -143,33 +244,6 @@ export function DashboardPage() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="bg-card rounded-lg shadow-card border border-border/40 p-6 animate-fade-in">
-          <h3 className="text-lg font-medium mb-4">Monthly Summary</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b border-border">
-              <span className="text-muted-foreground">Occupancy Rate</span>
-              <span className="font-medium">{metrics.occupancyRate.toFixed(1)}%</span>
-            </div>
-            <div className="flex justify-between items-center pb-3 border-b border-border">
-              <span className="text-muted-foreground">Total Revenue</span>
-              <span className="font-medium">{formatCurrency(metrics.revenue)}</span>
-            </div>
-            <div className="flex justify-between items-center pb-3 border-b border-border">
-              <span className="text-muted-foreground">Avg. Daily Rate</span>
-              <span className="font-medium">{formatCurrency(metrics.revenue / 30)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Total Bookings</span>
-              <span className="font-medium">35</span>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button className="text-sm text-primary hover:underline transition-all">
-              View full report
-            </button>
           </div>
         </div>
       </div>

@@ -3,10 +3,14 @@ import React, { useState } from "react";
 import { BookingCalendar } from "./BookingCalendar";
 import { Filter, Plus, Eye } from "lucide-react";
 import { bookings, rooms as allRooms } from "@/lib/data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 export function CalendarPage() {
   const [roomTypeFilter, setRoomTypeFilter] = useState<string>("all");
   const [floorFilter, setFloorFilter] = useState<string>("all");
+  const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
   
   // Apply filters to the rooms
   const filteredRooms = allRooms.filter(room => {
@@ -18,11 +22,28 @@ export function CalendarPage() {
   // Get unique floor values
   const floors = [...new Set(allRooms.map(room => room.floor))].sort();
   
+  // Handle new booking button click
+  const handleNewBookingClick = () => {
+    setIsNewBookingOpen(true);
+  };
+
+  // Handle form submission
+  const handleAddBooking = () => {
+    toast({
+      title: "New Booking",
+      description: "This would create a new booking in a real application."
+    });
+    setIsNewBookingOpen(false);
+  };
+  
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Availability Calendar</h1>
-        <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2">
+        <button 
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2"
+          onClick={handleNewBookingClick}
+        >
           <Plus className="h-4 w-4" /> New Booking
         </button>
       </div>
@@ -63,6 +84,28 @@ export function CalendarPage() {
       </div>
       
       <BookingCalendar rooms={filteredRooms} bookings={bookings} />
+
+      {/* New Booking Dialog */}
+      <Dialog open={isNewBookingOpen} onOpenChange={setIsNewBookingOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Create New Booking</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p>This is a placeholder for the booking form. In a real application, this would contain a form to create a new booking.</p>
+          </div>
+          
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setIsNewBookingOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddBooking}>
+              Create Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

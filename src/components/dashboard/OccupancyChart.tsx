@@ -45,7 +45,7 @@ export function OccupancyChart({ timeFilter }: OccupancyChartProps) {
             tickMargin={10}
           />
           <YAxis 
-            tickFormatter={(value) => `${value}%`}
+            tickFormatter={(value) => `${Math.round(value)}%`}
             domain={[0, 100]} 
             tick={{ fontSize: 12 }} 
             tickLine={false}
@@ -53,7 +53,7 @@ export function OccupancyChart({ timeFilter }: OccupancyChartProps) {
             tickMargin={10}
           />
           <Tooltip 
-            formatter={(value) => [`${value}%`, 'Occupancy Rate']}
+            formatter={(value) => [`${Math.round(Number(value))}%`, 'Occupancy Rate']}
             contentStyle={{ borderRadius: '0.5rem' }}
           />
           <Area 
