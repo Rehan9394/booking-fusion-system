@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Search, SlidersHorizontal, Plus, List, Grid as GridIcon, FileText, Edit } from "lucide-react";
 import { RoomGrid } from "./RoomGrid";
 import { RoomList } from "./RoomList";
-import { Room, rooms as mockRooms } from "@/lib/data";
+import { Room, Bed, rooms as mockRooms } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ export function RoomsPage() {
     status: "available",
     floor: 1,
     amenities: [],
+    description: "",
     size: 0,
     beds: []
   });
@@ -85,7 +86,7 @@ export function RoomsPage() {
     const { name, value } = e.target;
     setNewRoom(prev => ({
       ...prev,
-      [name]: name === "basePrice" || name === "size" || name === "capacity" ? 
+      [name]: name === "basePrice" || name === "size" || name === "capacity" || name === "floor" ? 
         parseFloat(value) || 0 : value
     }));
   };
@@ -164,7 +165,19 @@ export function RoomsPage() {
       // Update existing room
       setRooms(prev => 
         prev.map(room => 
-          room.id === selectedRoom.id ? { ...room, ...newRoom } : room
+          room.id === selectedRoom.id ? { 
+            ...room, 
+            number: newRoom.number || room.number,
+            type: newRoom.type || room.type,
+            capacity: newRoom.capacity || room.capacity,
+            basePrice: newRoom.basePrice || room.basePrice,
+            status: newRoom.status || room.status,
+            floor: newRoom.floor || room.floor,
+            amenities: newRoom.amenities || room.amenities,
+            size: newRoom.size,
+            beds: newRoom.beds,
+            description: newRoom.description
+          } : room
         )
       );
       
@@ -186,7 +199,8 @@ export function RoomsPage() {
       floor: 1,
       amenities: [],
       size: 0,
-      beds: []
+      beds: [],
+      description: ""
     });
   };
 

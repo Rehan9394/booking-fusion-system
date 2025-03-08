@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Plus, SlidersHorizontal, Calendar, User, Home } from "lucide-react";
 import { BookingTable } from "./BookingTable";
@@ -22,7 +21,6 @@ export function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
   
-  // New booking form state
   const [newBooking, setNewBooking] = useState({
     guestName: "",
     guestEmail: "",
@@ -39,7 +37,6 @@ export function BookingsPage() {
   useEffect(() => {
     let filtered = [...bookings];
 
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -50,7 +47,6 @@ export function BookingsPage() {
       );
     }
 
-    // Apply status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((booking) => booking.status === statusFilter);
     }
@@ -58,12 +54,10 @@ export function BookingsPage() {
     setFilteredBookings(filtered);
   }, [bookings, searchQuery, statusFilter]);
 
-  // Handle opening the new booking dialog
   const handleNewBookingClick = () => {
     setIsNewBookingOpen(true);
   };
 
-  // Handle input changes for the new booking form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewBooking(prev => ({
@@ -72,7 +66,6 @@ export function BookingsPage() {
     }));
   };
 
-  // Handle select changes
   const handleSelectChange = (name: string, value: any) => {
     setNewBooking(prev => ({
       ...prev,
@@ -80,7 +73,6 @@ export function BookingsPage() {
     }));
   };
 
-  // Handle date selection
   const handleDateChange = (name: 'checkIn' | 'checkOut', date: Date | undefined) => {
     if (date) {
       setNewBooking(prev => ({
@@ -90,9 +82,7 @@ export function BookingsPage() {
     }
   };
 
-  // Add new booking
   const handleAddBooking = () => {
-    // Validate required fields
     if (!newBooking.guestName || !newBooking.guestEmail || !newBooking.roomId || !newBooking.checkIn || !newBooking.checkOut) {
       toast({
         title: "Missing Required Fields",
@@ -102,30 +92,30 @@ export function BookingsPage() {
       return;
     }
 
-    // Create new booking object
     const newBookingObj: Booking = {
       id: `booking-${Date.now()}`,
       guest: {
+        id: `guest-${Date.now()}`,
         name: newBooking.guestName,
         email: newBooking.guestEmail,
         phone: newBooking.guestPhone || "Not provided"
       },
+      guestId: `guest-${Date.now()}`,
       roomId: newBooking.roomId,
-      checkIn: newBooking.checkIn.toISOString(),
-      checkOut: newBooking.checkOut.toISOString(),
+      checkIn: format(newBooking.checkIn, 'yyyy-MM-dd'),
+      checkOut: format(newBooking.checkOut, 'yyyy-MM-dd'),
       status: newBooking.status,
-      totalAmount: 850.00, // Sample amount, in real app this would be calculated
-      paymentStatus: "pending",
-      createdAt: new Date().toISOString(),
+      totalAmount: 850.00,
+      paymentStatus: "unpaid",
+      createdAt: format(new Date(), 'yyyy-MM-dd'),
+      updatedAt: format(new Date(), 'yyyy-MM-dd'),
       adults: newBooking.adults,
       children: newBooking.children,
       specialRequests: newBooking.specialRequests
     };
 
-    // Add to bookings list
     setBookings(prev => [newBookingObj, ...prev]);
     
-    // Close dialog and reset form
     setIsNewBookingOpen(false);
     setNewBooking({
       guestName: "",
@@ -192,7 +182,6 @@ export function BookingsPage() {
 
       <BookingTable bookings={filteredBookings} />
 
-      {/* New Booking Dialog */}
       <Dialog open={isNewBookingOpen} onOpenChange={setIsNewBookingOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -200,7 +189,6 @@ export function BookingsPage() {
           </DialogHeader>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-            {/* Guest Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium border-b pb-2">Guest Information</h3>
               
@@ -239,7 +227,6 @@ export function BookingsPage() {
               </div>
             </div>
             
-            {/* Booking Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium border-b pb-2">Booking Details</h3>
               
@@ -359,7 +346,6 @@ export function BookingsPage() {
               </div>
             </div>
             
-            {/* Special Requests */}
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="specialRequests">Special Requests</Label>
               <Textarea

@@ -38,6 +38,12 @@ export interface Booking {
   guest: Guest;
 }
 
+// Bed interface
+export interface Bed {
+  type: string;
+  count: number;
+}
+
 // Room interface
 export interface Room {
   id: string;
@@ -49,6 +55,10 @@ export interface Room {
   amenities: string[];
   floor: number;
   notes?: string;
+  size?: number;
+  description?: string;
+  beds?: Bed[];
+  images?: string[];
 }
 
 // Dashboard metrics

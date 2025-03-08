@@ -56,7 +56,7 @@ export function RoomDetails({ room, isOpen, onClose, onEdit }: RoomDetailsProps)
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Size</p>
-                    <p className="font-medium">{room.size} sq ft</p>
+                    <p className="font-medium">{room.size || 'N/A'} {room.size ? 'sq ft' : ''}</p>
                   </div>
                 </div>
               </div>
