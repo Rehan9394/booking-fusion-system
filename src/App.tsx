@@ -15,6 +15,7 @@ import { StaffPage } from "./components/staff/StaffPage";
 import { ReportsPage } from "./components/reports/ReportsPage";
 import { CleaningPage } from "./components/cleaning/CleaningPage";
 import { SettingsPage } from "./components/settings/SettingsPage";
+import { ExpensesPage } from "./components/expenses/ExpensesPage";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { ForgotPassword } from "./pages/ForgotPassword";
@@ -76,6 +77,14 @@ const App = () => (
                 element={
                   <MainLayout>
                     <StaffPage />
+                  </MainLayout>
+                } 
+              />
+              <Route 
+                path="/expenses" 
+                element={
+                  <MainLayout>
+                    <ExpensesPage />
                   </MainLayout>
                 } 
               />

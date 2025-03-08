@@ -13,7 +13,8 @@ import {
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  LogOut
+  LogOut,
+  Wallet
 } from "lucide-react";
 
 interface SidebarProps {
@@ -46,6 +47,11 @@ const navItems = [
     title: "Staff",
     icon: Users,
     href: "/staff",
+  },
+  {
+    title: "Expenses",
+    icon: Wallet,
+    href: "/expenses",
   },
   {
     title: "Reports",
