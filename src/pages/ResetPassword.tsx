@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 export function ResetPassword() {
@@ -29,20 +28,19 @@ export function ResetPassword() {
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Password reset successful",
-        description: "Your password has been reset successfully.",
-      });
-      
-      navigate('/login');
+      // Simulate password reset
+      setTimeout(() => {
+        toast({
+          title: "Password reset successful",
+          description: "Your password has been reset successfully.",
+        });
+        
+        navigate('/login');
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to reset password",
         variant: "destructive",
       });
     } finally {

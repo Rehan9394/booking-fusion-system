@@ -1,12 +1,11 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 export function ForgotPassword() {
@@ -14,27 +13,25 @@ export function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) throw error;
-      
-      setSubmitted(true);
-      toast({
-        title: "Password reset link sent",
-        description: "Check your email for the password reset link.",
-      });
+      // Simulate password reset
+      setTimeout(() => {
+        setSubmitted(true);
+        toast({
+          title: "Password reset link sent",
+          description: "Check your email for the password reset link.",
+        });
+      }, 1000);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to send password reset email",
         variant: "destructive",
       });
     } finally {

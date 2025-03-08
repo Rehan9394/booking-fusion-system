@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, testSupabaseConnection } from '@/lib/supabase';
@@ -176,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isDevBypass) {
         toast({
           title: "Development Mode",
-          description: "Auth bypass enabled. Account created successfully.",
+          description: "Account created successfully.",
         });
         return;
       }

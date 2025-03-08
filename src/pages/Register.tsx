@@ -1,13 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function Register() {
   const [email, setEmail] = useState('');
@@ -15,21 +15,8 @@ export function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [devMode, setDevMode] = useState(false);
-  const { signUp, user } = useAuth();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
-
-  // Check if in development mode with bypass enabled
-  useEffect(() => {
-    setDevMode(import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true');
-  }, []);
-
-  // If user is already logged in or we're in dev mode, redirect to home
-  useEffect(() => {
-    if (user || devMode) {
-      navigate('/');
-    }
-  }, [user, devMode, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,25 +32,15 @@ export function Register() {
     try {
       await signUp(email, password);
       
-      // In real scenario, Supabase might send a confirmation email
-      // For now, redirect to login
+      // Navigate to dashboard after successful signup
       setTimeout(() => {
-        navigate('/login');
+        navigate('/');
       }, 1500);
     } catch (err: any) {
-      console.error('Registration error:', err);
-      // Don't set an error if it's a network error - the toast will handle it
-      if (err.message !== 'Failed to fetch') {
-        setError(err.message || 'Failed to create account');
-      }
+      setError('Failed to create account');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Show dev mode bypass option
-  const handleDevBypass = () => {
-    navigate('/');
   };
 
   return (
@@ -80,31 +57,6 @@ export function Register() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          {import.meta.env.DEV && (
-            <Alert variant="info">
-              <Info className="h-4 w-4" />
-              <AlertTitle>Development Mode</AlertTitle>
-              <AlertDescription>
-                {!import.meta.env.VITE_SUPABASE_URL ? (
-                  <div className="space-y-2">
-                    <p>
-                      <span className="font-semibold">Missing Supabase credentials.</span> Please configure:
-                    </p>
-                    <ul className="list-disc pl-5 text-xs space-y-1">
-                      <li>VITE_SUPABASE_URL</li>
-                      <li>VITE_SUPABASE_ANON_KEY</li>
-                    </ul>
-                    <p className="text-xs pt-1">
-                      Or enable auth bypass by setting <span className="font-mono bg-blue-100 px-1 rounded">VITE_BYPASS_AUTH=true</span>
-                    </p>
-                  </div>
-                ) : (
-                  <p>Using Supabase URL: {import.meta.env.VITE_SUPABASE_URL.substring(0, 20)}...</p>
-                )}
-              </AlertDescription>
             </Alert>
           )}
           
@@ -152,25 +104,6 @@ export function Register() {
               )}
             </Button>
           </form>
-          
-          {import.meta.env.DEV && !import.meta.env.VITE_SUPABASE_URL && (
-            <div className="pt-2">
-              <Alert variant="warning">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Network Error</AlertTitle>
-                <AlertDescription className="space-y-2">
-                  <p>Cannot connect to authentication server.</p>
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-2 bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
-                    onClick={handleDevBypass}
-                  >
-                    Bypass Authentication (Dev Mode)
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
         </CardContent>
         <CardFooter className="flex flex-col">
           <div className="mt-2 text-center text-sm">
