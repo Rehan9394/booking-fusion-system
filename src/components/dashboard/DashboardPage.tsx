@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { ArrowDownRight, ArrowUpRight, BadgePercent, Banknote, CalendarClock, CheckCircle, Clock, Tool, AlertCircle, Zap } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, BadgePercent, Banknote, CalendarClock, CheckCircle, Clock, Wrench, AlertCircle, Zap } from "lucide-react";
 import { MetricCard } from "./MetricCard";
 import { OccupancyChart } from "./OccupancyChart";
 import { RevenueChart } from "./RevenueChart";
@@ -138,7 +137,7 @@ export function DashboardPage() {
           <span>Room Cleaning</span>
         </Button>
         <Button className="bg-primary/10 text-primary hover:bg-primary/20 flex flex-col items-center justify-center h-24 space-y-2">
-          <Tool className="h-6 w-6" />
+          <Wrench className="h-6 w-6" />
           <span>Maintenance</span>
         </Button>
         <Button className="bg-primary/10 text-primary hover:bg-primary/20 flex flex-col items-center justify-center h-24 space-y-2">
