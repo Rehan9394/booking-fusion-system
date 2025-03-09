@@ -1,9 +1,13 @@
 
 import React, { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { addDays, format, isSameDay, isSameMonth, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, isBefore } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Booking, Room, bookings, getStatusColorClass, rooms as allRooms } from "@/lib/data";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Booking, Room, bookings, getStatusColorClass, rooms as allRooms, formatCurrency } from "@/lib/data";
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface BookingCalendarProps {
   rooms: Room[];
@@ -13,6 +17,7 @@ interface BookingCalendarProps {
 export function BookingCalendar({ rooms, bookings }: BookingCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<"month" | "week">("week");
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   
   // Get days to display based on current view
   const getDaysToDisplay = () => {
@@ -66,6 +71,16 @@ export function BookingCalendar({ rooms, bookings }: BookingCalendarProps) {
     }
     
     return { isBooked: false };
+  };
+
+  // Handle edit booking
+  const handleEditBooking = (booking: Booking) => {
+    setSelectedBooking(booking);
+  };
+
+  // Handle close edit form
+  const handleCloseEdit = () => {
+    setSelectedBooking(null);
   };
   
   return (
@@ -174,18 +189,60 @@ export function BookingCalendar({ rooms, bookings }: BookingCalendarProps) {
                     )}
                   >
                     {isBooked && booking && (
-                      <div 
-                        className={cn(
-                          "h-full rounded p-1 flex flex-col justify-center",
-                          getStatusColorClass(booking.status),
-                          isCheckIn && "border-l-4 border-primary",
-                          isCheckOut && "border-r-4 border-primary",
-                        )}
-                      >
-                        <div className="font-medium truncate">{booking.guest.name}</div>
-                        {isCheckIn && <div>Check In</div>}
-                        {isCheckOut && <div>Check Out</div>}
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              onClick={() => handleEditBooking(booking)}
+                              className={cn(
+                                "h-full rounded p-1 flex flex-col justify-center cursor-pointer hover:brightness-95",
+                                getStatusColorClass(booking.status),
+                                isCheckIn && "border-l-4 border-primary",
+                                isCheckOut && "border-r-4 border-primary",
+                              )}
+                            >
+                              <div className="font-medium truncate">{booking.guest.name}</div>
+                              {isCheckIn && <div>Check In</div>}
+                              {isCheckOut && <div>Check Out</div>}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-md p-0">
+                            <Card className="border-0 shadow-none">
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-base">{booking.guest.name}</CardTitle>
+                                <CardDescription>
+                                  Room {room.number} • {room.type}
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent className="pb-2 space-y-1 text-sm">
+                                <div className="flex justify-between">
+                                  <span>Check In:</span>
+                                  <span className="font-medium">{formatDate(new Date(booking.checkIn))}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Check Out:</span>
+                                  <span className="font-medium">{formatDate(new Date(booking.checkOut))}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Status:</span>
+                                  <span className="font-medium capitalize">{booking.status.replace('_', ' ')}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Guests:</span>
+                                  <span className="font-medium">{booking.adults} adults, {booking.children} children</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Amount:</span>
+                                  <span className="font-medium">{formatCurrency(booking.totalAmount)}</span>
+                                </div>
+                              </CardContent>
+                              <CardFooter className="pt-0 text-xs text-muted-foreground">
+                                Click to edit booking details
+                              </CardFooter>
+                            </Card>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     
                     {isUnavailable && !isBooked && (
@@ -200,6 +257,108 @@ export function BookingCalendar({ rooms, bookings }: BookingCalendarProps) {
           ))}
         </div>
       </div>
+
+      {/* Edit Booking Popover */}
+      {selectedBooking && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md m-4">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle>Edit Booking</CardTitle>
+                <button onClick={handleCloseEdit} className="rounded-full p-1 hover:bg-muted">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <CardDescription>
+                Booking #{selectedBooking.id.split('-')[1]} for {selectedBooking.guest.name}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Check In</label>
+                  <div className="border rounded p-2 mt-1">
+                    {formatDate(new Date(selectedBooking.checkIn))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Check Out</label>
+                  <div className="border rounded p-2 mt-1">
+                    {formatDate(new Date(selectedBooking.checkOut))}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Room</label>
+                <div className="border rounded p-2 mt-1">
+                  {rooms.find(r => r.id === selectedBooking.roomId)?.number || 'Unknown'} - 
+                  {rooms.find(r => r.id === selectedBooking.roomId)?.type || 'Unknown'}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Status</label>
+                  <div className="border rounded p-2 mt-1 capitalize">
+                    {selectedBooking.status.replace('_', ' ')}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Payment</label>
+                  <div className="border rounded p-2 mt-1 capitalize">
+                    {selectedBooking.paymentStatus.replace('_', ' ')}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Adults</label>
+                  <div className="border rounded p-2 mt-1">
+                    {selectedBooking.adults}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Children</label>
+                  <div className="border rounded p-2 mt-1">
+                    {selectedBooking.children}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Guest Information</label>
+                <div className="border rounded p-2 mt-1 space-y-1">
+                  <div>{selectedBooking.guest.name}</div>
+                  <div className="text-sm text-muted-foreground">{selectedBooking.guest.email}</div>
+                  <div className="text-sm text-muted-foreground">{selectedBooking.guest.phone}</div>
+                  {selectedBooking.guest.address && (
+                    <div className="text-sm text-muted-foreground">{selectedBooking.guest.address}</div>
+                  )}
+                </div>
+              </div>
+              
+              {selectedBooking.specialRequests && (
+                <div>
+                  <label className="text-sm font-medium">Special Requests</label>
+                  <div className="border rounded p-2 mt-1 text-sm">
+                    {selectedBooking.specialRequests}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex justify-between border-t pt-4">
+              <div className="text-sm font-medium">
+                Total: {formatCurrency(selectedBooking.totalAmount)}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Created: {formatDateTime(selectedBooking.createdAt)}
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
