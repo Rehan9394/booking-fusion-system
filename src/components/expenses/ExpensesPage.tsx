@@ -193,33 +193,29 @@ export function ExpensesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Expense Records</CardTitle>
-          <Tabs 
-            defaultValue="all" 
-            value={activeTab} 
-            onValueChange={setActiveTab} 
-            className="w-full"
-          >
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="recent">Recent</TabsTrigger>
               <TabsTrigger value="pending">Pending</TabsTrigger>
               <TabsTrigger value="approved">Approved</TabsTrigger>
             </TabsList>
+            <TabsContent value="all" className="m-0">
+              <ExpensesTable />
+            </TabsContent>
+            <TabsContent value="recent" className="m-0">
+              <ExpensesTable filter="recent" />
+            </TabsContent>
+            <TabsContent value="pending" className="m-0">
+              <ExpensesTable filter="pending" />
+            </TabsContent>
+            <TabsContent value="approved" className="m-0">
+              <ExpensesTable filter="approved" />
+            </TabsContent>
           </Tabs>
         </CardHeader>
         <CardContent>
-          <TabsContent value="all" className="m-0">
-            <ExpensesTable />
-          </TabsContent>
-          <TabsContent value="recent" className="m-0">
-            <ExpensesTable filter="recent" />
-          </TabsContent>
-          <TabsContent value="pending" className="m-0">
-            <ExpensesTable filter="pending" />
-          </TabsContent>
-          <TabsContent value="approved" className="m-0">
-            <ExpensesTable filter="approved" />
-          </TabsContent>
+          {/* No TabsContent components here */}
         </CardContent>
       </Card>
     </div>
