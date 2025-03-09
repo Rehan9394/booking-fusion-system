@@ -1,5 +1,6 @@
 // Mock data for the hotel PMS
 import { subDays, addDays, format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { generateId } from "./utils";
 
 // Guest statuses
 export type BookingStatus = "confirmed" | "checked_in" | "checked_out" | "cancelled" | "no_show";
@@ -9,6 +10,12 @@ export type RoomStatus = "available" | "occupied" | "cleaning" | "maintenance" |
 
 // Room types
 export type RoomType = "standard" | "deluxe" | "suite" | "presidential";
+
+// Cleaning status
+export type CleaningStatus = "pending" | "in_progress" | "completed" | "verified" | "scheduled";
+
+// Cleaning priority
+export type CleaningPriority = "low" | "medium" | "high" | "urgent";
 
 // Guest interface
 export interface Guest {
@@ -59,6 +66,21 @@ export interface Room {
   description?: string;
   beds?: Bed[];
   images?: string[];
+}
+
+// Cleaning interface
+export interface Cleaning {
+  id: string;
+  roomId: string;
+  status: CleaningStatus;
+  priority: CleaningPriority;
+  assignedTo?: string;
+  notes?: string;
+  createdAt: string;
+  scheduledAt?: string;
+  completedAt?: string;
+  verifiedAt?: string;
+  estimatedDuration?: number; // in minutes
 }
 
 // Dashboard metrics
@@ -246,6 +268,93 @@ export const guests: Guest[] = [
     phone: "+1 (555) 678-9012",
     address: "101 Maple Dr, Miami, FL 33101",
   },
+];
+
+// Mock cleanings
+export const cleanings: Cleaning[] = [
+  {
+    id: "cleaning-1",
+    roomId: "room-2",
+    status: "completed",
+    priority: "high",
+    assignedTo: "staff-1",
+    notes: "Guest checking in at 3 PM",
+    createdAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss"),
+    scheduledAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss"),
+    completedAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
+    estimatedDuration: 45
+  },
+  {
+    id: "cleaning-2",
+    roomId: "room-3",
+    status: "pending",
+    priority: "medium",
+    assignedTo: "staff-2",
+    createdAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
+    scheduledAt: format(addDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss"),
+    estimatedDuration: 30
+  },
+  {
+    id: "cleaning-3",
+    roomId: "room-5",
+    status: "in_progress",
+    priority: "urgent",
+    assignedTo: "staff-3",
+    notes: "Deep cleaning required",
+    createdAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss"),
+    scheduledAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
+    estimatedDuration: 60
+  },
+  {
+    id: "cleaning-4",
+    roomId: "room-8",
+    status: "verified",
+    priority: "medium",
+    assignedTo: "staff-1",
+    createdAt: format(subDays(new Date(), 3), "yyyy-MM-dd'T'HH:mm:ss"),
+    scheduledAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss"),
+    completedAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss"),
+    verifiedAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss"),
+    estimatedDuration: 30
+  },
+  {
+    id: "cleaning-5",
+    roomId: "room-11",
+    status: "scheduled",
+    priority: "low",
+    assignedTo: "staff-2",
+    createdAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss"),
+    scheduledAt: format(addDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss"),
+    estimatedDuration: 30
+  }
+];
+
+// Mock staff data (for cleaning assignments)
+export const staff = [
+  {
+    id: "staff-1",
+    name: "Maria Rodriguez",
+    role: "Housekeeper",
+    shift: "Morning"
+  },
+  {
+    id: "staff-2",
+    name: "John Smith",
+    role: "Housekeeper",
+    shift: "Afternoon"
+  },
+  {
+    id: "staff-3",
+    name: "Sarah Johnson",
+    role: "Housekeeping Supervisor",
+    shift: "Morning"
+  },
+  {
+    id: "staff-4",
+    name: "David Williams",
+    role: "Housekeeper",
+    shift: "Afternoon"
+  }
 ];
 
 // Generate today's date
@@ -726,3 +835,99 @@ export const getRoomTypeDisplayName = (type: RoomType): string => {
       return type;
   }
 };
+
+// Helper to get cleaning status display name
+export const getCleaningStatusDisplayName = (status: CleaningStatus): string => {
+  switch (status) {
+    case "pending":
+      return "Pending";
+    case "in_progress":
+      return "In Progress";
+    case "completed":
+      return "Completed";
+    case "verified":
+      return "Verified";
+    case "scheduled":
+      return "Scheduled";
+    default:
+      return status;
+  }
+};
+
+// Helper to get cleaning priority display name and color
+export const getCleaningPriorityInfo = (priority: CleaningPriority): { name: string; color: string } => {
+  switch (priority) {
+    case "low":
+      return { name: "Low", color: "text-blue-500" };
+    case "medium":
+      return { name: "Medium", color: "text-yellow-500" };
+    case "high":
+      return { name: "High", color: "text-orange-500" };
+    case "urgent":
+      return { name: "Urgent", color: "text-red-500" };
+    default:
+      return { name: priority, color: "text-gray-500" };
+  }
+};
+
+// Functions to interact with cleaning data
+export const getAllCleanings = () => {
+  return cleanings.map(cleaning => ({
+    ...cleaning,
+    room: rooms.find(room => room.id === cleaning.roomId),
+    assignedToStaff: cleaning.assignedTo ? staff.find(s => s.id === cleaning.assignedTo) : undefined
+  }));
+};
+
+export const getCleaningById = (id: string) => {
+  const cleaning = cleanings.find(cleaning => cleaning.id === id);
+  if (!cleaning) return null;
+  
+  return {
+    ...cleaning,
+    room: rooms.find(room => room.id === cleaning.roomId),
+    assignedToStaff: cleaning.assignedTo ? staff.find(s => s.id === cleaning.assignedTo) : undefined
+  };
+};
+
+export const getCleaningsByStatus = (status: CleaningStatus) => {
+  return cleanings
+    .filter(cleaning => cleaning.status === status)
+    .map(cleaning => ({
+      ...cleaning,
+      room: rooms.find(room => room.id === cleaning.roomId),
+      assignedToStaff: cleaning.assignedTo ? staff.find(s => s.id === cleaning.assignedTo) : undefined
+    }));
+};
+
+export const addCleaning = (data: Omit<Cleaning, 'id' | 'createdAt'>) => {
+  const newCleaning: Cleaning = {
+    id: generateId('cleaning-'),
+    createdAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
+    ...data
+  };
+  
+  cleanings.push(newCleaning);
+  return newCleaning;
+};
+
+export const updateCleaning = (id: string, data: Partial<Omit<Cleaning, 'id' | 'createdAt'>>) => {
+  const index = cleanings.findIndex(cleaning => cleaning.id === id);
+  if (index === -1) return null;
+  
+  cleanings[index] = {
+    ...cleanings[index],
+    ...data
+  };
+  
+  return cleanings[index];
+};
+
+export const deleteCleaning = (id: string) => {
+  const index = cleanings.findIndex(cleaning => cleaning.id === id);
+  if (index === -1) return false;
+  
+  cleanings.splice(index, 1);
+  return true;
+};
+
