@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { format } from "date-fns";
 import { 
   getAllCleanings, 
   getCleaningStatusDisplayName, 
@@ -39,7 +39,6 @@ export function CleaningList() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Filter cleanings by status
   const filterCleanings = (status: CleaningStatus | "all") => {
     if (status === "all") {
       setCleanings(getAllCleanings());
@@ -51,11 +50,9 @@ export function CleaningList() {
     }
   };
 
-  // Handle cleaning status update
   const handleStatusUpdate = (id: string, newStatus: CleaningStatus) => {
     const dataToUpdate: Partial<Cleaning> = { status: newStatus };
     
-    // Add timestamps based on the new status
     if (newStatus === "in_progress") {
       dataToUpdate.scheduledAt = format(new Date(), "yyyy-MM-dd'T'HH:mm:ss");
     } else if (newStatus === "completed") {
@@ -75,19 +72,16 @@ export function CleaningList() {
     }
   };
 
-  // Handle cleaning edit
   const handleEdit = (cleaning: Cleaning) => {
     setSelectedCleaning(cleaning);
     setIsEditDialogOpen(true);
   };
 
-  // Handle cleaning delete
   const handleDelete = (cleaning: Cleaning) => {
     setSelectedCleaning(cleaning);
     setIsDeleteDialogOpen(true);
   };
 
-  // Save edited cleaning
   const saveEditedCleaning = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedCleaning) return;
@@ -118,7 +112,6 @@ export function CleaningList() {
     }
   };
 
-  // Confirm deletion
   const confirmDelete = () => {
     if (!selectedCleaning) return;
     
@@ -135,7 +128,6 @@ export function CleaningList() {
     }
   };
 
-  // Get priority badge
   const getPriorityBadge = (priority: CleaningPriority) => {
     const { name, color } = getCleaningPriorityInfo(priority);
     return (
@@ -147,7 +139,6 @@ export function CleaningList() {
 
   return (
     <div className="space-y-4">
-      {/* Status filter */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Button 
           variant="outline" 
@@ -193,7 +184,6 @@ export function CleaningList() {
         </Button>
       </div>
 
-      {/* Cleanings list */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cleanings.map((cleaning) => (
           <Card key={cleaning.id} className="overflow-hidden">
@@ -260,7 +250,6 @@ export function CleaningList() {
                 </Button>
               </div>
               
-              {/* Quick status update buttons */}
               <div>
                 {cleaning.status === "pending" && (
                   <Button size="sm" variant="secondary" onClick={() => handleStatusUpdate(cleaning.id, "in_progress")}>
@@ -286,7 +275,6 @@ export function CleaningList() {
         ))}
       </div>
 
-      {/* Edit Dialog */}
       {selectedCleaning && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
@@ -391,7 +379,6 @@ export function CleaningList() {
         </Dialog>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

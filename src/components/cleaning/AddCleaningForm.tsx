@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,7 +47,9 @@ const formSchema = z.object({
   }),
   assignedTo: z.string().optional(),
   scheduledAt: z.string().optional(),
-  estimatedDuration: z.string().transform(val => val ? parseInt(val) : undefined).optional(),
+  estimatedDuration: z.string()
+    .transform(val => val ? parseInt(val, 10) : undefined)
+    .optional(),
   notes: z.string().optional(),
 });
 
@@ -84,7 +87,7 @@ export function AddCleaningForm({ onSuccess }: AddCleaningFormProps) {
         assignedTo: data.assignedTo || undefined,
         notes: data.notes || undefined,
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt).toISOString() : undefined,
-        estimatedDuration: data.estimatedDuration ? parseInt(data.estimatedDuration) : undefined,
+        estimatedDuration: data.estimatedDuration,
       };
       
       // Add the cleaning
